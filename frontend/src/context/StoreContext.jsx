@@ -7,7 +7,7 @@ export const StoreContext = createContext(null);
 const StoreContextProvider =(props)=>{
 
   const[cartItems , setCartItems] = useState({});
-  const url = "http://localhost:4000"
+  const url = "https://delivery-app-backendd.onrender.com"
   const [token,setToken] = useState("");
   const [food_list,setFoodList] = useState([]);
 
@@ -16,10 +16,18 @@ const StoreContextProvider =(props)=>{
     setFoodList(response.data.data)
   }
 
-  const loadCartData = async(token)=>{
-    const response = await axios.post(url +"/api/cart/get",{},{headers:{token}})
+const loadCartData = async (token) => {
+  try {
+    const response = await axios.post(url + "/api/cart/get", {}, { headers: { token } });
     setCartItems(response.data.cartData);
+  } catch (error) {
+    console.error("Invalid token, clearing localStorage", error);
+    localStorage.removeItem("token");
+    setToken("");
+    setCartItems({});
   }
+};
+
 
   useEffect(()=>{
     async function loadData(){
@@ -53,18 +61,18 @@ const StoreContextProvider =(props)=>{
      }
   }
 
-
-  const getTotalAmount = ()=>{
-    let totalAmount = 0;
-    for(const item in cartItems){
-      if(cartItems[item]>0){
-        let itemInfo = food_list.find((product)=>product._id===item);
-        totalAmount+= itemInfo.price*cartItems[item];
+const getTotalAmount = () => {
+  let totalAmount = 0;
+  for (const item in cartItems) {
+    if (cartItems[item] > 0) {
+      const itemInfo = food_list.find(product => product?._id === item);
+      if (itemInfo) {
+        totalAmount += itemInfo.price * cartItems[item];
       }
     }
-    return totalAmount;
   }
-
+  return totalAmount;
+};
 
   const contextValue = {
       food_list,
